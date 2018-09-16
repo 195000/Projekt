@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>PS2 Project</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+		  crossorigin="anonymous">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-12 text-center">
+				<h1>PS2 Project</h1>
+			</div>
+		</div>
+		<div class="row">
+			<a href="/index.html" class="btn btn-default">Wstecz</a>
+		</div>
+		<div class="row">
+			<table class="table"></table>
+		</div>
+		<div class="row">
+			<div class="col-xs-12" id="error"></div>
+		</div>
+		<div class="row">
+			<div class="col-sm-4">
+				<input type="text" class="form-control" id="in1" placeholder="pierwsza">
+			</div>
+			<div class="col-sm-4">
+				<input type="text" class="form-control" id="in2" placeholder="druga">
+			</div>
+			<div class="col-sm-4">
+				<button class="btn btn-default" id="insert_button">Dodaj</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-8">
+				<input type="text" class="form-control" id="usun" placeholder="id">
+			</div>
+			<div class="col-sm-4">
+				<button class="btn btn-default" id="usun_button">Usuń</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-1">
+				<input type="text" class="form-control" id="id" placeholder="id">
+			</div>
+			<div class="col-sm-4">
+				<input type="text" class="form-control" id="edit1" placeholder="pierwsza">
+			</div>
+			<div class="col-sm-3">
+				<input type="text" class="form-control" id="edit2" placeholder="druga">
+			</div>
+			<div class="col-sm-4">
+				<button class="btn btn-default" id="edit_button">Edytuj</button>
+			</div>
+		</div>
+	</div>
+	<script src="Scripts/jquery-1.10.2.min.js"></script>
+	<script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+			crossorigin="anonymous"></script>
+	<script src="signalr/hubs"></script>
+	<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+	<script type="text/javascript">
+		$(function () {
+			var chat = $.connection.chatHub;
+			$.connection.hub.start().done(function () {
+				$(document).ready(function () {
+					chat.server.readSingleTable('SELECT * FROM ' + Cookies.get('database') +
+						';', $.connection
+							.hub.id);
+				});
+			});
+			chat.client.singleTableResponse = function (message) {
+				var table = $.map(message, function (value, index) {
+					return [value];
+				})
+				console.log(table);
+				$(document).ready(function () {
+					if (Cookies.get('database') == 'Users') {
+						$('.table').DataTable({
+							data: table,
+							columns: [
+								{ title: '' },
+								{ title: '' }
+							]
+						});
+					} else {
+						$('.table').DataTable({
+							data: table,
+							columns: [
+								{ title: '' },
+								{ title: '' },
+								{ title: '' }
+							]
+						});
+					}
+				});
+			};
+			$('#insert_button').click(function () {
+				var par1 = $('#in1').val()par1 = $('#in1').val();
+				var par2 = $('#in2').val();
+				chat.server.insertRow($.connection.hub.id, Cookies.get('database'), par1, par2);
+			});
+			$('#usun_button').click(function () {
+				var par1 = $('#usun').val();
+				chat.server.deleteRow($.connection.hub.id, Cookies.get('database'), par1);
+			});
+			$('#edit_button').click(function () {
+				var par1 = $('#id').val();
+				var par2 = $('#edit1').val();
+				var par3 = $('#edit2').val();
+				chat.server.editRow($.connection.hub.id, Cookies.get('database'), par1, par2, par3);
+			});
+			chat.client.clientMessage = function (message) {
+				$('#error').text(message);
+				$('#error').css('display', 'inline-block');
+			}
+			chat.client.refresh = function () {
+				window.location.reload();
+			}
+		});
+	</script>
+</body>
